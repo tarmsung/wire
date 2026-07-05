@@ -29,6 +29,24 @@ const MIME = {
   '.svg': 'image/svg+xml',
 };
 
+// ICE servers handed to the browser. STUN is free/public; TURN (the relay that
+// rescues the ~10-15% of peers behind strict NATs) is optional and read from
+// env so credentials live in the deploy config, not the repo. TURN_URL may be a
+// comma-separated list (e.g. udp + tcp + tls variants).
+function iceServers() {
+  const servers = [
+    { urls: 'stun:stun.l.google.com:19302' },
+    { urls: 'stun:stun1.l.google.com:19302' },
+  ];
+  if (process.env.TURN_URL) {
+    const turn = { urls: process.env.TURN_URL.split(',').map((s) => s.trim()).filter(Boolean) };
+    if (process.env.TURN_USERNAME) turn.username = process.env.TURN_USERNAME;
+    if (process.env.TURN_CREDENTIAL) turn.credential = process.env.TURN_CREDENTIAL;
+    servers.push(turn);
+  }
+  return servers;
+}
+
 // First non-internal IPv4 address, so devices on the same network get a usable link
 function lanAddress() {
   for (const iface of Object.values(os.networkInterfaces())) {
@@ -67,6 +85,13 @@ const server = http.createServer((req, res) => {
     }
     res.writeHead(200, { 'Content-Type': 'application/json' });
     return res.end(JSON.stringify({ host: lanAddress(), port: PORT }));
+  }
+  if (urlPath === '/ice') {
+    // ICE servers for the browser: always STUN, plus a TURN relay if one is
+    // configured via env (kept out of source, set per-deploy). TURN credentials
+    // necessarily reach the client — that's how WebRTC TURN works.
+    res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
+    return res.end(JSON.stringify({ iceServers: iceServers() }));
   }
   if (urlPath === '/') urlPath = '/index.html';
   // Resolve inside ./public only — reject path traversal (the trailing path.sep

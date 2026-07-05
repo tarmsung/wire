@@ -9,14 +9,22 @@ const STREAM_THRESHOLD = 256 * 1024 * 1024; // offer disk streaming for files >=
 
 // fmtBytes, fmtEta, sanitizePath, sanitizeName, crc32Update, buildZip come from
 // wire-lib.js (loaded first) so they can be unit-tested outside the browser.
+// STUN-only defaults; the server may replace iceServers with a set that also
+// includes a TURN relay (see /ice + TURN_* env vars). Mutated in place so
+// createPeerConnection() always reads the latest.
 const RTC_CONFIG = {
   iceServers: [
     { urls: 'stun:stun.l.google.com:19302' },
     { urls: 'stun:stun1.l.google.com:19302' },
-    // For production, add a TURN server here as fallback for strict NATs:
-    // { urls: 'turn:your.turn.server:3478', username: '...', credential: '...' },
   ],
 };
+// Pull the deploy's ICE config (adds TURN when configured) at startup.
+fetch('/ice')
+  .then((r) => r.json())
+  .then((cfg) => {
+    if (cfg && Array.isArray(cfg.iceServers) && cfg.iceServers.length) RTC_CONFIG.iceServers = cfg.iceServers;
+  })
+  .catch(() => {}); // offline/dev: keep the STUN defaults
 
 // ---------- DOM helpers ----------
 const $ = (id) => document.getElementById(id);

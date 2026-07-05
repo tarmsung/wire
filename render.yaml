@@ -1,0 +1,25 @@
+# Render blueprint — one-click deploy with automatic HTTPS.
+# In Render: New → Blueprint, point it at this repo. Render builds, runs, and
+# serves it over https://<name>.onrender.com (WebSockets work out of the box).
+#
+# The TURN_* vars are marked `sync: false`, so they're NOT stored here — Render
+# prompts you to fill them in the dashboard. Leave them blank to run STUN-only
+# (works for most peers); set them (e.g. from Metered.ca's free tier) to also
+# relay the ~10-15% behind strict NATs.
+services:
+  - type: web
+    name: wire
+    runtime: node
+    plan: free
+    buildCommand: npm ci
+    startCommand: npm start
+    healthCheckPath: /
+    envVars:
+      - key: NODE_VERSION
+        value: "20"
+      - key: TURN_URL          # e.g. turn:relay.metered.ca:80  (comma-separate for multiple)
+        sync: false
+      - key: TURN_USERNAME
+        sync: false
+      - key: TURN_CREDENTIAL
+        sync: false

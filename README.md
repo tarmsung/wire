@@ -73,16 +73,50 @@ path sanitizing, CRC32, and a byte-for-byte ZIP round-trip) and integration
 tests that spin up the signaling server and exercise pairing, signal relay,
 the brute-force lockout, the room cap, and TTL expiry.
 
-## Before deploying for real use
+## Deploying
 
-- **HTTPS is required** — browsers only allow WebRTC + clipboard APIs on secure
-  origins (localhost is exempt). Put this behind any TLS proxy (Caddy, nginx,
-  Cloudflare) and the client automatically switches to `wss://`.
-- **Add a TURN server** — roughly 10–15% of peer pairs (strict corporate NATs,
-  some mobile carriers) cannot connect directly. A TURN server relays their
-  traffic as a fallback. Options: self-host [coturn](https://github.com/coturn/coturn),
-  or use a managed service (Twilio, Metered, Cloudflare Calls). Add the
-  credentials to `RTC_CONFIG` in `public/app.js`.
+The server holds live WebSocket connections, so it needs a host that runs a
+persistent Node process (not a static/serverless host).
+
+### One-click on Render (free, HTTPS included)
+
+This repo ships a [`render.yaml`](render.yaml) blueprint. In Render: **New →
+Blueprint**, point it at this repo, and it builds and serves the app at
+`https://<name>.onrender.com` — WebSockets and TLS work out of the box, no
+domain to buy. (Free web services cold-start after idle; the first request may
+take ~30s.) The same blueprint works for a paid plan if you outgrow the free tier.
+
+You don't need to own a domain: a platform subdomain (Render/Railway/Fly.io) or
+a tunnel (Cloudflare Tunnel, ngrok) gives you HTTPS for free. A custom domain is
+only needed for a branded URL or when self-hosting on a raw VPS behind Caddy.
+
+### Adding a TURN relay
+
+Direct peer-to-peer fails for roughly 10–15% of pairs (strict corporate NATs,
+some mobile carriers). A TURN server relays those as a fallback. The server
+reads TURN config from env and hands it to the browser via `/ice` — so
+credentials live in the deploy config, never in the repo:
+
+| Env var | Example |
+|---|---|
+| `TURN_URL` | `turn:relay.metered.ca:80` (comma-separate for multiple URLs) |
+| `TURN_USERNAME` | your relay username |
+| `TURN_CREDENTIAL` | your relay credential |
+
+Leave them unset to run STUN-only. Get free credentials from
+[Metered.ca](https://www.metered.ca/tools/openrelay/), or self-host
+[coturn](https://github.com/coturn/coturn). On Render, set these under the
+service's **Environment** tab (the blueprint leaves them blank for you to fill).
+
+### Why HTTPS matters
+
+The peer-to-peer transfer itself works over plain `http://` on a LAN. But a
+public deployment should use HTTPS: the **disk-streaming** and **clipboard**
+features require a secure context, and TLS keeps the signaling private. Any of
+the hosts above provide it automatically; the client auto-switches to `wss://`.
+
+## Later / nice-to-have
+
 - **Resume / integrity** — for flaky connections, add chunk sequence numbers
   and a hash check, and let the receiver request missing ranges.
 - **Folder streaming** — single large files stream to disk, but folders are
