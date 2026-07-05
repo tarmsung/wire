@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Wire — send a file, peer to peer</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><circle cx='6' cy='16' r='4' fill='%23FF6B35'/><rect x='10' y='15' width='12' height='2' fill='%23FF6B35'/><circle cx='26' cy='16' r='4' fill='%23FF6B35'/></svg>" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<div class="stage">
+  <header>
+    <h1>Wire</h1>
+    <p class="tagline">Send a file straight to another computer. It never touches a server.</p>
+  </header>
+
+  <div class="card">
+
+    <!-- Connection signature: two nodes joined by a wire -->
+    <div class="link">
+      <div class="link-row">
+        <div class="node" id="nodeLocal"></div>
+        <div class="wire" id="wire"><div class="pulse"></div></div>
+        <div class="node" id="nodeRemote"></div>
+      </div>
+      <div class="link-labels">
+        <span>You</span>
+        <span id="linkStatusLabel">not connected</span>
+        <span>Them</span>
+      </div>
+    </div>
+
+    <!-- Screen: choose role -->
+    <section id="screen-role">
+      <div class="role-grid">
+        <button class="role-btn" id="btnSend">
+          Send a file
+          <span>Get a code to share</span>
+        </button>
+        <button class="role-btn" id="btnReceive">
+          Receive a file
+          <span>Enter a code</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- Screen: sender waiting for peer -->
+    <section id="screen-sender-wait" class="hidden">
+      <p class="hint">Share this code with the other person</p>
+      <div class="code-display" id="roomCode" title="Click to copy">------</div>
+      <div class="btn-pair" id="copyBtns">
+        <button class="btn ghost" id="btnCopyCode">Copy code</button>
+        <button class="btn ghost" id="btnCopyLink">Copy link</button>
+      </div>
+      <!-- Shown when a peer enters the code: nothing connects until Accept -->
+      <div id="joinConfirm" class="hidden">
+        <p class="hint">Someone entered your code. Connect and let them receive your files?</p>
+        <div class="btn-pair">
+          <button class="btn" id="btnAcceptPeer">Accept &amp; connect</button>
+          <button class="btn ghost" id="btnDeclinePeer">Decline</button>
+        </div>
+      </div>
+      <p class="hint mono hidden" id="lanHint"></p>
+      <p class="status" id="senderStatus">Setting up…</p>
+      <button class="back" id="backFromSenderWait">‹ start over</button>
+    </section>
+
+    <!-- Screen: receiver enters code -->
+    <section id="screen-receiver-join" class="hidden">
+      <label for="codeInput">Enter the 6-character code</label>
+      <input type="text" id="codeInput" maxlength="6" placeholder="A1B2C3"
+             autocomplete="off" autocapitalize="characters" spellcheck="false" inputmode="text" />
+      <button class="btn" id="btnJoin">Connect</button>
+      <p class="status" id="joinStatus"></p>
+      <button class="back" id="backFromReceiverJoin">‹ start over</button>
+    </section>
+
+    <!-- Screen: sender connected, pick + send files -->
+    <section id="screen-sender-file" class="hidden">
+      <div class="done-badge">● connected</div>
+      <div id="pickArea">
+        <div id="dropZone" class="drop">
+          <p><strong>Click to choose files</strong><br />or drag files &amp; folders here</p>
+        </div>
+        <button class="btn ghost" id="btnPickFolder">Send a whole folder</button>
+      </div>
+      <input type="file" id="fileInput" class="hidden" multiple />
+      <input type="file" id="folderInput" class="hidden" webkitdirectory />
+      <div id="sendProgressArea" class="hidden">
+        <div class="file-row">
+          <span class="name" id="sendFileName"></span>
+          <span class="size" id="sendFileSize"></span>
+        </div>
+        <div class="progress-track"><div class="progress-fill" id="sendProgressFill"></div></div>
+        <div class="progress-meta">
+          <span id="sendProgressPct">0%</span>
+          <span id="sendProgressSpeed"></span>
+          <span id="sendProgressState">sending…</span>
+        </div>
+      </div>
+      <div id="sentFiles" class="received-files"></div>
+      <button class="btn ghost hidden" id="btnSendAnother">Send more files</button>
+      <button class="back" id="backFromSenderFile">‹ start over</button>
+    </section>
+
+    <!-- Screen: receiver connected, receiving files -->
+    <section id="screen-receiver-file" class="hidden">
+      <div class="done-badge">● connected</div>
+      <p class="hint" id="waitingForFile">Waiting for the other person to choose a file…</p>
+      <!-- Shown for large incoming files: stream to disk instead of buffering in RAM -->
+      <div id="saveChoice" class="hidden">
+        <p class="hint" id="saveChoiceText"></p>
+        <div class="btn-pair">
+          <button class="btn" id="btnChooseSave">Choose where to save</button>
+          <button class="btn ghost" id="btnKeepMemory">Keep in memory</button>
+        </div>
+      </div>
+      <div id="recvProgressArea" class="hidden">
+        <div class="file-row">
+          <span class="name" id="recvFileName"></span>
+          <span class="size" id="recvFileSize"></span>
+        </div>
+        <div class="progress-track"><div class="progress-fill" id="recvProgressFill"></div></div>
+        <div class="progress-meta">
+          <span id="recvProgressPct">0%</span>
+          <span id="recvProgressSpeed"></span>
+          <span id="recvProgressState">receiving…</span>
+        </div>
+      </div>
+      <div id="receivedFiles" class="received-files"></div>
+      <button class="back" id="backFromReceiverFile">‹ start over</button>
+    </section>
+
+    <p class="banner hidden" id="banner"></p>
+  </div>
+
+  <footer class="foot">Files move browser-to-browser over an encrypted WebRTC channel.</footer>
+</div>
+
+<script src="wire-lib.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

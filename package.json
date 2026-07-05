@@ -1,0 +1,13 @@
+{
+  "name": "p2p-file-transfer",
+  "version": "0.1.0",
+  "description": "Browser-to-browser file transfer over WebRTC data channels. Files never touch the server.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node --test \"test/*.test.js\""
+  },
+  "dependencies": {
+    "ws": "^8.18.0"
+  }
+}
