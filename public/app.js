@@ -981,3 +981,11 @@ if (/^[A-Z0-9]{6}$/.test(hash)) {
 }
 
 setLink('idle');
+
+// Register the service worker so Wirelink is installable and its shell works
+// offline. Failure is non-fatal (the site works fine without it).
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => {});
+  });
+}

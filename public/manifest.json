@@ -1,0 +1,16 @@
+{
+  "name": "Wirelink — peer-to-peer file transfer",
+  "short_name": "Wirelink",
+  "description": "Send files straight from one device to another over an encrypted peer-to-peer connection. No uploads, no sign-up, no size limits.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#EEF1F5",
+  "theme_color": "#2472E8",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
