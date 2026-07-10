@@ -31,16 +31,17 @@ body {
   padding: 24px;
 }
 
-.stage { width: 100%; max-width: 520px; }
+.stage { width: 100%; max-width: 600px; }
 
 h1 {
   font-family: 'Space Grotesk', sans-serif;
-  font-size: 28px;
+  font-size: clamp(40px, 6vw, 60px);
   font-weight: 700;
-  margin: 0 0 6px;
-  letter-spacing: -0.01em;
+  margin: 0 0 10px;
+  letter-spacing: -0.02em;
+  line-height: 1.05;
 }
-.tagline { color: var(--ink-soft); font-size: 14px; margin: 0 0 28px; }
+.tagline { color: var(--ink-soft); font-size: clamp(16px, 2vw, 19px); margin: 0 0 32px; }
 
 .card {
   background: var(--panel);
