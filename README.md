@@ -90,6 +90,42 @@ You don't need to own a domain: a platform subdomain (Render/Railway/Fly.io) or
 a tunnel (Cloudflare Tunnel, ngrok) gives you HTTPS for free. A custom domain is
 only needed for a branded URL or when self-hosting on a raw VPS behind Caddy.
 
+### Self-hosting on a VPS
+
+Three things run on the box (config files in [`deploy/`](deploy/)):
+
+1. **The Node server** (`server.js`) — serves the web app and relays signaling.
+   Run it under systemd with [`deploy/wire.service`](deploy/wire.service).
+2. **Caddy** — HTTPS reverse proxy with an automatic Let's Encrypt cert; config
+   in [`deploy/Caddyfile`](deploy/Caddyfile).
+3. **coturn** — optional TURN relay; example in
+   [`deploy/turnserver.conf`](deploy/turnserver.conf).
+
+Assuming Ubuntu/Debian:
+
+```bash
+# DNS first: point wirelink.online (A record) at the VPS public IP.
+
+# 1. Node + the app
+curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+sudo apt-get install -y nodejs
+sudo useradd --system --home /opt/wire wire
+sudo git clone https://github.com/tarmsung/wire.git /opt/wire
+cd /opt/wire && sudo npm ci --omit=dev && sudo chown -R wire:wire /opt/wire
+sudo cp deploy/wire.service /etc/systemd/system/wire.service
+sudo systemctl daemon-reload && sudo systemctl enable --now wire   # listens on :3000
+
+# 2. Caddy for HTTPS (auto cert for wirelink.online)
+sudo apt-get install -y debian-keyring debian-archive-keyring apt-transport-https
+# (add Caddy's apt repo per caddyserver.com/docs/install, then:)
+sudo apt-get install -y caddy
+sudo cp deploy/Caddyfile /etc/caddy/Caddyfile
+sudo systemctl reload caddy
+```
+
+That's the whole app live at `https://wirelink.online`. TURN (step 3) is
+optional — see below.
+
 ### Adding a TURN relay
 
 Direct peer-to-peer fails for roughly 10–15% of pairs (strict corporate NATs,
