@@ -33,15 +33,20 @@ body {
 
 .stage { width: 100%; max-width: 600px; }
 
-h1 {
-  font-family: 'Space Grotesk', sans-serif;
-  font-size: clamp(40px, 6vw, 60px);
-  font-weight: 700;
-  margin: 0 0 10px;
-  letter-spacing: -0.02em;
-  line-height: 1.05;
+h1 { margin: 0 0 14px; }
+.brand { text-align: center; }
+.brand img {
+  display: block;
+  width: 100%;
+  max-width: 300px;
+  height: auto;
+  margin: 0 auto;
+  background: #fff;
+  border-radius: 18px;
+  padding: 12px;
+  box-shadow: 0 1px 2px rgba(22, 35, 58, 0.05), 0 10px 30px rgba(22, 35, 58, 0.08);
 }
-.tagline { color: var(--ink-soft); font-size: clamp(16px, 2vw, 19px); margin: 0 0 32px; }
+.tagline { color: var(--ink-soft); font-size: clamp(16px, 2vw, 19px); margin: 0 0 32px; text-align: center; }
 
 .card {
   background: var(--panel);
