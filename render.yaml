@@ -14,6 +14,9 @@ services:
     buildCommand: npm ci
     startCommand: npm start
     healthCheckPath: /
+    domains:
+      - wirelink.online
+      - www.wirelink.online
     envVars:
       - key: NODE_VERSION
         value: "20"
